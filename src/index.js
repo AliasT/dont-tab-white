@@ -12,48 +12,82 @@ function setCssRules(target, rules) {
 }
 
 export default class DontTapWhite {
+  speed = 1
   constructor() {
     this.initGameWrapper()
     this.initStage()
     this.initScene()
+    this.update()
+  }
+
+  update = () => {
+    requestAnimationFrame(this.update)
+    this.pageA.y += this.speed
+    this.pageB.y += this.speed
+
+    if(this.pageA.y >= this.app.view.height) {
+      this.pageA.y = -this.app.view.height
+      this.redrawPage(this.pageA._blockContainer)
+    }
+    if(this.pageB.y >= this.app.view.height) {
+      this.pageB.y = -this.app.view.height
+      this.redrawPage(this.pageB._blockContainer)
+    }
   }
 
   initScene() {
     const pageA = this.buildPage()
     const pageB = this.buildPage()
+    this.pageA = pageA
+    this.pageB = pageB
     pageA.y = 0
-    pageB.y = this.app.view.height
+    pageB.y = -this.app.view.height
     this.app.stage.addChild(pageA)
     this.app.stage.addChild(pageB)
   }
 
-  buildPage(color) {
-    const page = new Container()
-    const blockWidth = this.app.view.width / 4
-    const blockHeight = this.app.view.height / 5
+  get blockWidth() {
+    return this.app.view.width / 4
+  }
 
-    // blocks
+  get blockHeight() {
+    return this.app.view.height / 5
+  }
+
+  blockClick = (evt) => {
+    evt.target.clear()
+  }
+
+  redrawPage(page) {
+    page.removeChildren()
     for(let i = 0; i < 5; i++) {
       const indexWithBlack = Math.floor(Math.random() * 4)
       for(let j = 0; j < 4; j++) {
         const g = new Graphics()
+        g.interactive = true
+        g.pointertap = this.blockClick
         g.beginFill(indexWithBlack == j ? 0x000000 : 0xffffff)
-        g.drawRect(j * blockWidth, i * blockHeight, blockWidth, blockHeight)
+        g.drawRect(j * this.blockWidth, i * this.blockHeight, this.blockWidth, this.blockHeight)
         g.endFill()
         page.addChild(g)
       }
     }
-
+  }
+  buildPage(color) {
+    const page = new Container()
+    page._blockContainer = new Container()
+    page.addChild(page._blockContainer)
+    this.redrawPage(page._blockContainer)
     //lines
     const g = new Graphics()
     g.lineStyle(1, 0x000000)
-    for(let i = 1; i < 5; i++) {
-      g.moveTo(0, i * blockHeight)
-      g.lineTo(this.app.view.width, i * blockHeight)
+    for(let i = 0; i < 5; i++) {
+      g.moveTo(0, i * this.blockHeight)
+      g.lineTo(this.app.view.width, i * this.blockHeight)
     }
     for(let j = 1; j < 4; j++) {
-      g.moveTo(j * blockWidth, 0)
-      g.lineTo(j * blockWidth, this.app.view.height)
+      g.moveTo(j * this.blockWidth, 0)
+      g.lineTo(j * this.blockWidth, this.app.view.height)
     }
     g.closePath()
     page.addChild(g)
@@ -79,9 +113,5 @@ export default class DontTapWhite {
       bottom: 0
     })
     document.body.appendChild(this.wrapper)
-  }
-
-  start() {
-
   }
 }

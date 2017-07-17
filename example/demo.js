@@ -1,3 +1,3 @@
 import DontTabWhite from '../src/'
 
-new DontTabWhite().start()
+new DontTabWhite()
