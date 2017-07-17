@@ -28,20 +28,36 @@ export default class DontTapWhite {
   }
 
   buildPage(color) {
-    const pageContainer = new Container()
+    const page = new Container()
     const blockWidth = this.app.view.width / 4
     const blockHeight = this.app.view.height / 5
-    for(let i = 0; i < 5; i ++) {
+
+    // blocks
+    for(let i = 0; i < 5; i++) {
       const indexWithBlack = Math.floor(Math.random() * 4)
       for(let j = 0; j < 4; j++) {
         const g = new Graphics()
         g.beginFill(indexWithBlack == j ? 0x000000 : 0xffffff)
-        g.drawRect(j * blockWidth, i * blockHeight, blockWidth - 1, blockHeight - 1)
+        g.drawRect(j * blockWidth, i * blockHeight, blockWidth, blockHeight)
         g.endFill()
-        pageContainer.addChild(g)
+        page.addChild(g)
       }
     }
-    return pageContainer
+
+    //lines
+    const g = new Graphics()
+    g.lineStyle(1, 0x000000)
+    for(let i = 1; i < 5; i++) {
+      g.moveTo(0, i * blockHeight)
+      g.lineTo(this.app.view.width, i * blockHeight)
+    }
+    for(let j = 1; j < 4; j++) {
+      g.moveTo(j * blockWidth, 0)
+      g.lineTo(j * blockWidth, this.app.view.height)
+    }
+    g.closePath()
+    page.addChild(g)
+    return page
   }
 
   initStage() {
