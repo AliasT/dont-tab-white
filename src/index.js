@@ -25,14 +25,17 @@ export default class DontTapWhite {
     const _raf = requestAnimationFrame(this.update)
     this.pageA.y += this.speed
     this.pageB.y += this.speed
-
     this.indicatorY += this.speed
 
     // gameover
-    const rect = this.blacks[this.blacks.length - 1].getBounds()
-    if(rect.y >= this.viewHeight) {
-      cancelAnimationFrame(_raf)
-      return 
+    try {
+      const rect = this.blacks[this.blacks.length - 1].getBounds()
+      if(rect.y >= this.viewHeight) {
+        cancelAnimationFrame(_raf)
+        return 
+      }
+    } catch (e) {
+
     }
 
     if(this.pageA.y >= this.viewHeight) {
@@ -52,8 +55,8 @@ export default class DontTapWhite {
     this.pageA = pageA
     this.pageB = pageB
 
-    pageA.y = 0
-    pageB.y = -this.viewHeight
+    pageA.y = -2 * this.blockHeight
+    pageB.y = pageA.y - this.viewHeight
     this.app.stage.addChild(pageA)
     this.app.stage.addChild(pageB)
   }
@@ -67,16 +70,17 @@ export default class DontTapWhite {
   }
 
   get blockWidth() {
-    return this.viewWidth / 4
+    return Math.ceil(this.viewWidth / 4)
   }
 
   get blockHeight() {
-    return this.viewHeight / 5
+    return Math.ceil(this.viewHeight / 4)
   }
 
   blockClick = (evt, page, index) => {
     const currentBlackIndex = this.blacks.indexOf(evt.target)
     if(!this.blacks[currentBlackIndex+1]) {
+      evt.stopPropagation()
       evt.target.clear()
       this.blacks.pop()
     }
@@ -87,13 +91,13 @@ export default class DontTapWhite {
     // 数组存储黑块
     page._blacks = []
     page.removeChildren()
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < 4; i++) {
       const indexWithBlack = Math.floor(Math.random() * 4)
       for(let j = 0; j < 4; j++) {
         const isBlack = indexWithBlack == j
         const g = new Graphics()
         g.interactive = true
-        g.pointertap = (evt) => this.blockClick(evt, page, i * 5 + j)
+        g.pointertap = (evt) => this.blockClick(evt, page, i * 4 + j)
         if(isBlack) page._blacks.push(g)
         g.beginFill(isBlack ? 0x000000 : 0xffffff)
         g.drawRect(j * this.blockWidth, i * this.blockHeight, this.blockWidth, this.blockHeight)
@@ -103,44 +107,39 @@ export default class DontTapWhite {
     }
     this.blacks = page._blacks.concat(this.blacks)
   }
+
   buildPage(color) {
     const page = new Container()
     page._blockContainer = new Container()
     page.addChild(page._blockContainer)
     this.redrawPage(page._blockContainer)
-    //lines
-    const g = new Graphics()
-    g.lineStyle(1, 0x000000)
-    for(let i = 0; i < 5; i++) {
-      g.moveTo(0, i * this.blockHeight)
-      g.lineTo(this.viewWidth, i * this.blockHeight)
-    }
-    for(let j = 1; j < 4; j++) {
-      g.moveTo(j * this.blockWidth, 0)
-      g.lineTo(j * this.blockWidth, this.viewHeight)
-    }
-    g.closePath()
-    page.addChild(g)
     return page
   }
 
   initStage() {
+    const rect = this.wrapper.getBoundingClientRect()
     this.app = new Application({
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: rect.width,
+      height: rect.height,
       backgroundColor: 0xffffff
     })
+
+
     this.wrapper.appendChild(this.app.view)
+    // setCssRules(this.app.view, {
+    //   border: 'solid 1px #000'
+    // })
   }
 
   initGameWrapper() {
     this.wrapper = document.createElement('div')
     setCssRules(this.wrapper, {
       position: 'fixed',
-      left: 0,
-      top: 0,
-      width: '100%',
-      bottom: 0
+      'box-sizing': 'border-box',
+      left: '0',
+      top: '0',
+      right: '0',
+      bottom: '0'
     })
     document.body.appendChild(this.wrapper)
   }
