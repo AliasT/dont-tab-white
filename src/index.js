@@ -18,7 +18,6 @@ export default class DontTapWhite {
     this.initGameWrapper()
     this.initStage()
     this.initScene()
-    this.initBoundsChecker()
     this.update()
   }
 
@@ -30,10 +29,11 @@ export default class DontTapWhite {
     this.indicatorY += this.speed
 
     // gameover
-    // if(this.indicatorY >= this.viewHeight) {
-    //   cancelAnimationFrame(_raf)
-    //   return 
-    // }
+    const rect = this.blacks[this.blacks.length - 1].getBounds()
+    if(rect.y >= this.viewHeight) {
+      cancelAnimationFrame(_raf)
+      return 
+    }
 
     if(this.pageA.y >= this.viewHeight) {
       this.pageA.y = -this.viewHeight
@@ -81,10 +81,6 @@ export default class DontTapWhite {
       this.blacks.pop()
     }
     // 设置indicatorY的新位置
-  }
-
-  initBoundsChecker() {
-    this.indicatorY = this.viewHeight - this.blockHeight
   }
 
   redrawPage(page) {
