@@ -13,24 +13,34 @@ function setCssRules(target, rules) {
 
 export default class DontTapWhite {
   speed = 1
+  blacks = []
   constructor() {
     this.initGameWrapper()
     this.initStage()
     this.initScene()
+    this.initBoundsChecker()
     this.update()
   }
 
   update = () => {
-    requestAnimationFrame(this.update)
+    const _raf = requestAnimationFrame(this.update)
     this.pageA.y += this.speed
     this.pageB.y += this.speed
 
-    if(this.pageA.y >= this.app.view.height) {
-      this.pageA.y = -this.app.view.height
+    this.indicatorY += this.speed
+
+    // gameover
+    // if(this.indicatorY >= this.viewHeight) {
+    //   cancelAnimationFrame(_raf)
+    //   return 
+    // }
+
+    if(this.pageA.y >= this.viewHeight) {
+      this.pageA.y = -this.viewHeight
       this.redrawPage(this.pageA._blockContainer)
     }
-    if(this.pageB.y >= this.app.view.height) {
-      this.pageB.y = -this.app.view.height
+    if(this.pageB.y >= this.viewHeight) {
+      this.pageB.y = -this.viewHeight
       this.redrawPage(this.pageB._blockContainer)
     }
   }
@@ -38,40 +48,64 @@ export default class DontTapWhite {
   initScene() {
     const pageA = this.buildPage()
     const pageB = this.buildPage()
+
     this.pageA = pageA
     this.pageB = pageB
+
     pageA.y = 0
-    pageB.y = -this.app.view.height
+    pageB.y = -this.viewHeight
     this.app.stage.addChild(pageA)
     this.app.stage.addChild(pageB)
   }
 
+  get viewWidth() {
+    return this.app.view.width
+  }
+
+  get viewHeight() {
+    return this.app.view.height
+  }
+
   get blockWidth() {
-    return this.app.view.width / 4
+    return this.viewWidth / 4
   }
 
   get blockHeight() {
-    return this.app.view.height / 5
+    return this.viewHeight / 5
   }
 
-  blockClick = (evt) => {
-    evt.target.clear()
+  blockClick = (evt, page, index) => {
+    const currentBlackIndex = this.blacks.indexOf(evt.target)
+    if(!this.blacks[currentBlackIndex+1]) {
+      evt.target.clear()
+      this.blacks.pop()
+    }
+    // 设置indicatorY的新位置
+  }
+
+  initBoundsChecker() {
+    this.indicatorY = this.viewHeight - this.blockHeight
   }
 
   redrawPage(page) {
+    // 数组存储黑块
+    page._blacks = []
     page.removeChildren()
     for(let i = 0; i < 5; i++) {
       const indexWithBlack = Math.floor(Math.random() * 4)
       for(let j = 0; j < 4; j++) {
+        const isBlack = indexWithBlack == j
         const g = new Graphics()
         g.interactive = true
-        g.pointertap = this.blockClick
-        g.beginFill(indexWithBlack == j ? 0x000000 : 0xffffff)
+        g.pointertap = (evt) => this.blockClick(evt, page, i * 5 + j)
+        if(isBlack) page._blacks.push(g)
+        g.beginFill(isBlack ? 0x000000 : 0xffffff)
         g.drawRect(j * this.blockWidth, i * this.blockHeight, this.blockWidth, this.blockHeight)
         g.endFill()
         page.addChild(g)
       }
     }
+    this.blacks = page._blacks.concat(this.blacks)
   }
   buildPage(color) {
     const page = new Container()
@@ -83,11 +117,11 @@ export default class DontTapWhite {
     g.lineStyle(1, 0x000000)
     for(let i = 0; i < 5; i++) {
       g.moveTo(0, i * this.blockHeight)
-      g.lineTo(this.app.view.width, i * this.blockHeight)
+      g.lineTo(this.viewWidth, i * this.blockHeight)
     }
     for(let j = 1; j < 4; j++) {
       g.moveTo(j * this.blockWidth, 0)
-      g.lineTo(j * this.blockWidth, this.app.view.height)
+      g.lineTo(j * this.blockWidth, this.viewHeight)
     }
     g.closePath()
     page.addChild(g)
