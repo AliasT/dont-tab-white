@@ -25,7 +25,6 @@ export default class DontTapWhite {
     const _raf = requestAnimationFrame(this.update)
     this.pageA.y += this.speed
     this.pageB.y += this.speed
-    this.indicatorY += this.speed
 
     // gameover
     try {
@@ -84,7 +83,6 @@ export default class DontTapWhite {
       evt.target.clear()
       this.blacks.pop()
     }
-    // 设置indicatorY的新位置
   }
 
   redrawPage(page) {
